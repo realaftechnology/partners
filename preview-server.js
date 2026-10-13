@@ -8,7 +8,7 @@ const path = require("path");
 const ROOT = __dirname;
 const RECORDINGS = path.join(__dirname, "..", "Assets", "Recordings");
 const PORT = process.env.PORT || 4173;
-const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png", ".pdf": "application/pdf", ".ttf": "font/ttf", ".mp4": "video/mp4" };
+const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png", ".pdf": "application/pdf", ".ttf": "font/ttf", ".mp4": "video/mp4", ".ics": "text/calendar; charset=utf-8" };
 
 http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split("?")[0]);

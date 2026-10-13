@@ -26,6 +26,7 @@
   const ICON = {
     play: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
     down: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     chev: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
@@ -152,6 +153,7 @@
         <p class="call-when">Every ${esc(weekday)} · ${esc(call.timeLabel)}</p>
         ${call.topic && !live ? `<p class="call-where" style="color:var(--snow)">${esc(call.topic)}</p>` : ""}
         <p class="call-where">${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
+        <button class="btn press remind" data-remind>${ICON.bell}Set A Reminder</button>
       </section>`;
   }
 
@@ -279,6 +281,35 @@
       </div>`;
   }
 
+  // The weekly call as a repeating calendar event with a 30 minute alert.
+  // The same event lives in call-reminder.ics; keep the two in step with `call` in content.js.
+  function reminderHTML() {
+    const start = nextCall(new Date());
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: call.timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(start).map((x) => [x.type, x.value]));
+    const pad = (n) => String(n).padStart(2, "0");
+    const day = parts.year + parts.month + parts.day;
+    const endMin = call.hour * 60 + call.minute + call.lengthMinutes;
+    const google = "https://calendar.google.com/calendar/render?" + new URLSearchParams({
+      action: "TEMPLATE",
+      text: "OS Partner Call",
+      dates: `${day}T${pad(call.hour)}${pad(call.minute)}00/${day}T${pad(Math.floor(endMin / 60))}${pad(endMin % 60)}00`,
+      ctz: call.timeZone,
+      recur: "RRULE:FREQ=WEEKLY;BYDAY=" + ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][call.weekday],
+      details: `Weekly partner training with ${call.host}. ${call.timeLabel}. Join in The Operator Standard app.`,
+      location: "The Operator Standard app",
+    });
+    const android = /android/i.test(navigator.userAgent);
+    const apple = `<a class="btn press${android ? "" : " btn-ember"}" href="call-reminder.ics">Apple Calendar</a>`;
+    const goog = `<a class="btn press${android ? " btn-ember" : ""}" href="${esc(google)}" target="_blank" rel="noopener">Google Calendar</a>`;
+    return `
+      <div class="sheet-text">
+        <p class="label">Weekly Partner Call · ${esc(call.timeLabel)}</p>
+        <h2 id="sheet-title">Never Miss A Call.</h2>
+        <p class="desc">Add the call to your calendar once. It repeats every week and your phone reminds you before it starts.</p>
+      </div>
+      <div class="sheet-actions">${android ? goog + apple : apple + goog}</div>`;
+  }
+
   /* ---------- Routing ---------- */
   // #tab shows a screen, #tab/id opens that item's sheet on top of it.
   let currentTab = null;
@@ -300,6 +331,7 @@
       document.querySelectorAll(".tabbar a").forEach((a) => (a.dataset.tab === tab ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
     }
     if (id) {
+      sheet.classList.toggle("center", byId[id].type !== "guide"); // video sits mid-screen, where the eyes are
       sheetBody.innerHTML = sheetHTML(byId[id]);
       if (!sheet.open) sheet.showModal();
       sheet.scrollTop = 0;
@@ -308,6 +340,12 @@
   }
 
   document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-remind]")) {
+      sheet.classList.remove("center");
+      sheetBody.innerHTML = reminderHTML();
+      sheet.showModal();
+      return armFlaps(sheetBody);
+    }
     const o = e.target.closest("[data-open]");
     if (!o) return;
     openedHere = true;

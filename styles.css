@@ -258,3 +258,12 @@ h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.08; font-weight: 700; }
 }
 .thumb.has-poster .thumb-top, .thumb.has-poster .thumb-title { position: relative; }
 .thumb.has-poster .thumb-top .label { color: var(--snow); }
+
+/* Call reminder */
+.remind { margin-top: 18px; }
+
+/* Video player: a centered pop-up that fades in, not a bottom sheet */
+.sheet.center { margin: auto; width: calc(100% - 24px); border-radius: 20px; padding-bottom: 22px; }
+.sheet.center[open] { animation: pop 0.22s ease-out; }
+.sheet.center .grab { display: none; }
+@keyframes pop { from { opacity: 0; transform: scale(0.97); } }
