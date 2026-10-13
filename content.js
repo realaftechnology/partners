@@ -10,10 +10,11 @@
           "guide"    = PDF guide (downloadable)
 
   video:  paste the normal share link from wherever the video is hosted.
-          A direct .mp4 link (or a file in the /media folder) plays in the
-          phone's own video player, which is the cleanest result. YouTube,
-          Vimeo, Loom and Google Drive links are embedded using that service's
-          player. Leave it "" and the card shows "Coming Soon".
+          Videos live in the Cloudflare R2 bucket "os-partner-media" and play
+          in the phone's own video player. Upload the .mp4 there and use
+          "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/Your-File.mp4".
+          YouTube, Vimeo, Loom and Google Drive links also work, but they use
+          that service's player. Leave it "" and the card shows "Coming Soon".
 
   file:   put the PDF in the /files folder and write "files/Your-File.pdf".
   cover:  optional image for the card (guides use page one of the PDF).
@@ -43,8 +44,7 @@ window.PORTAL = {
       title: "Instagram Edits Tutorial",
       date: "2026-10-08",
       description: "A walkthrough of editing your content in Instagram's Edits app.",
-      // Compressed copy hosted with the site. Original: https://drive.google.com/file/d/103GP8rAnRnoeE1KfgCY_l2odk9SJF_np/view
-      video: "media/instagram-edits-tutorial.mp4",
+      video: "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/instagram-edits-tutorial.mp4",
       poster: "assets/posters/instagram-edits-tutorial.jpg",
       duration: "10:38",
     },
@@ -121,7 +121,7 @@ window.PORTAL = {
       date: "2026-09-21",
       description: "The full call behind the field guide.",
       poster: "assets/posters/ten-things-call.jpg",
-      video: "https://drive.google.com/file/d/1wBk7_2xbpzpZoyCHPlg0BZXgpGjb1aIw/view",
+      video: "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/ten-things-call.mp4",
       duration: "1:07:50",
       related: "ten-things-guide",
     },
@@ -132,7 +132,7 @@ window.PORTAL = {
       date: "2026-09-14",
       description: "The first partner call. Open questions and answers on personal brand and content.",
       poster: "assets/posters/kickoff-call.jpg",
-      video: "https://drive.google.com/file/d/1lzQ8ci9bYo_98X-dHE0deLlCgvJPRRR7/view",
+      video: "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/kickoff-call.mp4",
       duration: "1:21:03",
     },
   ],
