@@ -284,3 +284,6 @@ html, body { height: 100%; overflow: hidden; }
 /* Embedded players that are laid out larger and scaled down to fit (see fitEmbed) */
 .sheet-media { overflow: hidden; }
 .sheet-media iframe[data-min-height] { transform-origin: 0 0; max-width: none; }
+
+/* Vertical videos: the frame narrows to the video's shape and stays centered */
+.sheet-media { margin: 0 auto; }

@@ -343,7 +343,8 @@
     video.play().catch(() => {});
   }
 
-  sheet.addEventListener("close", () => (sheetBody.innerHTML = "")); // stops playback
+  // Emptying the sheet stops playback. Skip it if another item was opened before this event arrived.
+  sheet.addEventListener("close", () => !sheet.open && (sheetBody.innerHTML = ""));
   sheet.addEventListener("click", (e) => e.target === sheet && sheet.close());
   document.getElementById("sheet-close").addEventListener("click", () => sheet.close());
 
