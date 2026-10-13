@@ -221,7 +221,7 @@
             <li><button class="press" data-tab="${v.tab}">${esc(v.heading.replace(".", ""))}<span class="label">${String(ofType(k).length).padStart(2, "0")}</span>${ICON.chev}</button></li>`).join("")}
         </ul>
       </section>
-      <p class="label foot">Questions · help@operatorstandard.com</p>`;
+      <p class="label foot">Questions · matt@andyfrisella.com</p>`;
   }
 
   function listView(type) {
