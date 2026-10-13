@@ -128,9 +128,10 @@
     }
   }
 
+  // Days, hours, minutes and seconds left, as eight digits.
   const countdown = (start) => {
-    const mins = Math.max(0, Math.ceil((start - Date.now()) / 60000));
-    return [Math.floor(mins / 1440), Math.floor((mins % 1440) / 60), mins % 60].map((n) => String(n).padStart(2, "0")).join("");
+    const secs = Math.max(0, Math.ceil((start - Date.now()) / 1000));
+    return [Math.floor(secs / 86400), Math.floor((secs % 86400) / 3600), Math.floor((secs % 3600) / 60), secs % 60].map((n) => String(n).padStart(2, "0")).join("");
   };
 
   function callHTML() {
@@ -156,7 +157,7 @@
           : `<p class="label call-kicker">Next Live Call</p>
              <h2 class="call-title">${esc(day)}.</h2>`}
         <p class="call-time">${esc(call.timeLabel)}</p>
-        ${live ? "" : `<div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}</div>`}
+        ${live ? "" : `<div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}${unit(6, "Sec")}</div>`}
         ${call.topic && !live ? `<p class="call-topic">${esc(call.topic)}</p>` : ""}
         <p class="call-where">Every ${esc(weekday)}. Live training with ${esc(call.host)}. ${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
         <button class="btn press remind" data-remind>${ICON.bell}Set A Reminder</button>
@@ -412,5 +413,5 @@
   if (NAMES.includes(start) && start !== "home") goTo(start, true);
   armFlaps(pager);
   flipTiles(true);
-  setInterval(tickCall, 15000);
+  setInterval(tickCall, 1000);
 })();

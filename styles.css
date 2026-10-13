@@ -318,3 +318,9 @@ html, body { height: 100%; overflow: hidden; }
 @media (min-width: 640px) {
   .sheet.closing { animation: fade-out 0.2s forwards; }
 }
+
+/* Countdown: four clearly separate groups, with the unit names in ember */
+.board { gap: 18px; }
+.tiles { gap: 3px; }
+.tile { height: 52px; font-size: 27px; border-radius: 7px; }
+.unit .label { color: var(--ember); }
