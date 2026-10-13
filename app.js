@@ -27,6 +27,7 @@
   const ICON = {
     play: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
     down: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    playMark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.8v16.4L20 12z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
     bell: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     chev: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
@@ -80,7 +81,7 @@
           ${r.type === "replay" ? `<span class="label thumb-date">${esc(longDate(r.date))}</span>` : ""}
           <span class="thumb-title">${esc(period(r.title))}</span>
         </span>
-        ${r.video ? `<span class="play">${ICON.play}</span>` : ""}
+        ${r.video ? `<span class="play">${ICON.playMark}</span>` : ""}
         ${r.duration ? `<span class="badge">${esc(r.duration)}</span>` : r.video ? "" : `<span class="badge">SOON</span>`}
       </span>`;
   }
@@ -191,7 +192,7 @@
       r.type === "guide"
         ? `<a class="btn btn-ember press" href="${esc(r.file)}" download="${esc(fileName(r))}">${ICON.down}Download</a>`
         : r.video
-          ? `<button class="btn btn-ember press" data-open="${esc(r.id)}">${ICON.play}${t.action}</button>`
+          ? "" // the play mark on the thumbnail is the action
           : `<span class="btn" aria-disabled="true">Coming Soon</span>`;
 
     return `
@@ -207,7 +208,7 @@
           ${r.cover ? `<span class="label">${esc(t.label)}</span><h2>${esc(period(r.title))}</h2>` : ""}
           <p class="desc">${esc(r.description)}</p>
         </button>
-        <div class="latest-action">${action}</div>
+        ${action ? `<div class="latest-action">${action}</div>` : ""}
       </section>
       <section class="block">
         <div class="block-head"><h2>Recent Drops.</h2></div>
