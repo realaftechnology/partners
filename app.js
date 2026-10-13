@@ -154,7 +154,7 @@
         ${live
           ? `<p class="label call-kicker live">Live Now</p>
              <h2 class="call-title">${esc(call.topic || "The Call Is On.")}</h2>`
-          : `<p class="label call-kicker">Next Live Call</p>
+          : `<p class="label call-kicker">Next Live Training</p>
              <h2 class="call-title">${esc(day)}.</h2>`}
         <p class="call-time">${esc(call.timeLabel)}</p>
         ${live ? "" : `<div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}${unit(6, "Sec")}</div>`}
