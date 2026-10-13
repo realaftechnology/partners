@@ -308,16 +308,15 @@
       details: `Weekly partner training with ${call.host}. ${call.timeLabel}. Join in The Operator Standard app.`,
       location: "The Operator Standard app",
     });
-    const android = /android/i.test(navigator.userAgent);
-    const apple = `<a class="btn press${android ? "" : " btn-ember"}" href="call-reminder.ics">Apple Calendar</a>`;
-    const goog = `<a class="btn press${android ? " btn-ember" : ""}" href="${esc(google)}" target="_blank" rel="noopener">Google Calendar</a>`;
+    const goog = `<a class="btn btn-ember press" href="${esc(google)}" target="_blank" rel="noopener">Google Calendar</a>`;
+    const apple = `<a class="btn press" href="call-reminder.ics">Apple Calendar</a>`;
     return `
       <div class="sheet-text">
         <p class="label">Weekly Partner Call · ${esc(call.timeLabel)}</p>
         <h2 id="sheet-title">Never Miss A Call.</h2>
         <p class="desc">Add the call to your calendar once. It repeats every week and your phone reminds you before it starts.</p>
       </div>
-      <div class="sheet-actions">${android ? goog + apple : apple + goog}</div>`;
+      <div class="sheet-actions">${goog}${apple}</div>`;
   }
 
   /* ---------- Sheet control ---------- */
