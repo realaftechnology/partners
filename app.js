@@ -32,6 +32,28 @@
     chev: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
+  /* ---------- Anonymous usage counts ---------- */
+  // Feeds the /admin dashboard: visits, plays, how far videos are watched, downloads and
+  // reminder taps. Each browser gets a random id so repeat taps aren't counted as new people.
+  // No names or contact details are collected.
+  const visitorId = (() => {
+    try {
+      let id = localStorage.getItem("os_visitor");
+      if (!id) localStorage.setItem("os_visitor", (id = crypto.randomUUID()));
+      return id;
+    } catch {
+      return "anon-" + Math.random().toString(36).slice(2, 12);
+    }
+  })();
+  const trackable = !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  function track(type, item = "", value = 0) {
+    if (!trackable) return;
+    try {
+      const body = JSON.stringify({ v: visitorId, type, item, value });
+      if (!navigator.sendBeacon || !navigator.sendBeacon("api/event", body)) fetch("api/event", { method: "POST", body, keepalive: true }).catch(() => {});
+    } catch {}
+  }
+
   /* ---------- Split-flap text ---------- */
   // Mono labels and numbers shuffle through characters, then settle left to right,
   // like a departure board. Mono type keeps the width fixed while they spin.
@@ -309,8 +331,8 @@
       details: `Weekly partner training with ${call.host}. ${call.timeLabel}. Join in The Operator Standard app.`,
       location: "The Operator Standard app",
     });
-    const goog = `<a class="btn btn-ember press" href="${esc(google)}" target="_blank" rel="noopener">Google Calendar</a>`;
-    const apple = `<a class="btn press" href="call-reminder.ics">Apple Calendar</a>`;
+    const goog = `<a class="btn btn-ember press" data-calendar="google" href="${esc(google)}" target="_blank" rel="noopener">Google Calendar</a>`;
+    const apple = `<a class="btn press" data-calendar="apple" href="call-reminder.ics">Apple Calendar</a>`;
     return `
       <div class="sheet-text">
         <p class="label">Weekly Partner Call · ${esc(call.timeLabel)}</p>
@@ -334,7 +356,7 @@
   }
   window.addEventListener("resize", fitEmbed);
 
-  function openSheet(html, centered) {
+  function openSheet(html, centered, id) {
     sheet.classList.remove("closing");
     sheet.classList.toggle("center", centered); // video sits mid-screen, where the eyes are
     sheetBody.innerHTML = html;
@@ -349,6 +371,26 @@
     // Fit the frame to the video once it plays, so vertical calls aren't boxed into 16:9.
     video.addEventListener("playing", () => video.videoWidth && (frame.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`), { once: true });
     video.play().catch(() => {});
+    trackVideo(video, id);
+  }
+
+  // Counts a play once the video actually starts, then reports each 10% of it watched.
+  // Watched time is summed from real playback, so skipping ahead doesn't count as watching.
+  function trackVideo(video, id) {
+    let started = false, last = null, watched = 0, sent = 0;
+    video.addEventListener("playing", () => {
+      if (!started) track("play", id);
+      started = true;
+    });
+    video.addEventListener("seeking", () => (last = null));
+    video.addEventListener("timeupdate", () => {
+      const t = video.currentTime;
+      if (last !== null && t > last && t - last < 2) watched += t - last;
+      last = t;
+      if (!video.duration) return;
+      const reached = Math.min(100, Math.floor(((watched + 1) / video.duration) * 10) * 10);
+      while (sent < reached) track("progress", id, (sent += 10));
+    });
   }
 
   // Emptying the sheet stops playback. Skip it if another item was opened before this event arrived.
@@ -402,11 +444,16 @@
   document.addEventListener("click", (e) => {
     const tab = e.target.closest("[data-tab]");
     if (tab) return goTo(tab.dataset.tab);
-    if (e.target.closest("[data-remind]")) return openSheet(reminderHTML(), false);
+    if (e.target.closest("[data-remind]")) return track("remind_open"), openSheet(reminderHTML(), false);
+    const cal = e.target.closest("[data-calendar]");
+    if (cal) track("remind_" + cal.dataset.calendar);
+    const dl = e.target.closest("a[download]");
+    if (dl) track("download", items.find((r) => r.file === dl.getAttribute("href"))?.id || "");
     const o = e.target.closest("[data-open]");
-    if (o && byId[o.dataset.open]) openSheet(sheetHTML(byId[o.dataset.open]), byId[o.dataset.open].type !== "guide");
+    if (o && byId[o.dataset.open]) openSheet(sheetHTML(byId[o.dataset.open]), byId[o.dataset.open].type !== "guide", o.dataset.open);
   });
 
+  track("visit");
   markTab(0);
   const start = location.hash.slice(1);
   if (NAMES.includes(start) && start !== "home") goTo(start, true);

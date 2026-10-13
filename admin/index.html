@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#08090A">
+  <title>Resource Stats · The Operator Standard</title>
+  <link rel="icon" href="../assets/bison-white.svg" type="image/svg+xml">
+  <style>
+    @font-face { font-family: "Inter"; src: url("../assets/fonts/Inter.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+    @font-face { font-family: "Geist Mono"; src: url("../assets/fonts/GeistMono.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+    :root {
+      --obsidian: #08090A; --card: #161718; --card-hi: #1D1E20; --line: #26282B;
+      --snow: #F7F8F8; --fog: #8A8F98; --ember: #F4700D;
+      --ember-flame: linear-gradient(180deg, #FF8C3A, #E05500);
+      --sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: var(--obsidian); color: var(--snow); font: 16px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.08; font-weight: 700; }
+    button, input { font: inherit; color: inherit; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+    .label { font: 500 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fog); }
+    .ember { color: var(--ember); }
+    .topbar { display: grid; place-items: center; height: 58px; }
+    .topbar img { width: 44px; }
+    .head { padding: 14px 0 22px; }
+    .head h1 { font-size: 36px; letter-spacing: -0.04em; margin-top: 8px; }
+    .head .label + .label { margin-top: 10px; }
+
+    /* Range filter: one row above everything it controls */
+    .ranges { display: flex; gap: 8px; margin-bottom: 20px; }
+    .chip { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--fog); font: 500 14px/1 var(--sans); cursor: pointer; }
+    .chip[aria-pressed="true"] { background: var(--snow); border-color: var(--snow); color: var(--obsidian); }
+
+    /* Headline numbers */
+    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tile { background: var(--card); border-radius: 14px; padding: 16px 16px 14px; }
+    .tile b { display: block; font: 500 38px/1 var(--mono); font-variant-numeric: tabular-nums; margin-top: 10px; }
+    .tile small { display: block; margin-top: 8px; color: var(--fog); font-size: 13px; }
+
+    section { padding-top: 40px; }
+    section > h2 { font-size: 24px; }
+    section > h2::before { content: ""; display: block; width: 22px; height: 2px; margin-bottom: 12px; background: var(--ember); }
+    .sub { color: var(--fog); font-size: 14.5px; margin-top: 6px; }
+
+    /* Bar charts: one series, thin bars, rounded tops, anchored to the baseline */
+    .chart { position: relative; margin-top: 18px; }
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: var(--h, 120px); border-bottom: 1px solid var(--line); }
+    .bar { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; background: none; border: 0; padding: 0; cursor: pointer; }
+    .bar i { display: block; width: 100%; max-width: 26px; min-height: 0; border-radius: 4px 4px 0 0; background: var(--ember); transition: opacity 0.12s; }
+    .bars:hover .bar i, .bars.touched .bar i { opacity: 0.45; }
+    .bars .bar:hover i, .bars .bar.on i { opacity: 1; }
+    .bars.snow .bar i { background: var(--snow); }
+    .axis { display: flex; justify-content: space-between; margin-top: 8px; }
+    .tip { min-height: 20px; margin-top: 10px; font-size: 14px; color: var(--snow); }
+    .tip span { color: var(--fog); }
+
+    /* Per-video rows */
+    .video { padding: 22px 0; border-top: 1px solid var(--line); }
+    .video:first-of-type { margin-top: 18px; }
+    .video h3 { font-size: 19px; letter-spacing: -0.02em; margin-top: 6px; }
+    .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+    .nums b { display: block; font: 500 24px/1 var(--mono); font-variant-numeric: tabular-nums; }
+    .nums .label { display: block; margin-top: 6px; }
+    .video .chart { margin-top: 16px; --h: 64px; }
+
+    /* Simple count rows */
+    .rows { margin-top: 14px; }
+    .row { display: flex; align-items: baseline; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+    .row h3 { font-size: 16.5px; letter-spacing: -0.015em; font-weight: 600; flex: 1; min-width: 0; }
+    .row b { font: 500 20px/1 var(--mono); font-variant-numeric: tabular-nums; }
+    .row .label { white-space: nowrap; }
+
+    .empty { color: var(--fog); padding: 18px 0; }
+    .foot { padding-top: 44px; text-align: center; }
+    .foot a { color: inherit; }
+
+    /* Passcode gate */
+    .gate { max-width: 380px; margin: 12vh auto 0; padding: 0 20px; }
+    .gate h1 { font-size: 34px; letter-spacing: -0.04em; margin-top: 8px; }
+    .gate p { color: var(--fog); margin-top: 10px; }
+    .gate input { width: 100%; height: 54px; margin-top: 22px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); font-size: 17px; }
+    .gate button { width: 100%; min-height: 54px; margin-top: 10px; border: 0; border-radius: 14px; background: var(--ember-flame); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; }
+    .gate .err { color: var(--snow); min-height: 22px; margin-top: 12px; font-size: 14.5px; }
+    :focus-visible { outline: 2px solid var(--snow); outline-offset: 3px; border-radius: 8px; }
+    @media (min-width: 640px) { .tiles { grid-template-columns: repeat(4, 1fr); } .head h1 { font-size: 44px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar"><a href="../" aria-label="Back to Partner Resources"><img src="../assets/bison-white.svg" alt=""></a></header>
+  <main id="app"></main>
+
+  <script src="../content.js"></script>
+  <script>
+  (function () {
+    const app = document.getElementById("app");
+    const resources = (window.PORTAL && window.PORTAL.resources) || [];
+    const byId = Object.fromEntries(resources.map((r) => [r.id, r]));
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const num = (n) => Number(n || 0).toLocaleString("en-US");
+    const KEY = "os_admin_key";
+    const RANGES = [{ days: 7, text: "7 Days" }, { days: 30, text: "30 Days" }, { days: 0, text: "All Time" }];
+    let days = 30;
+
+    const getKey = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
+    const setKey = (k) => { try { k ? localStorage.setItem(KEY, k) : localStorage.removeItem(KEY); } catch {} };
+
+    function gate(message) {
+      app.innerHTML = `
+        <form class="gate">
+          <p class="label ember">Admin</p>
+          <h1>Resource Stats.</h1>
+          <p>Enter the admin passcode to see how the Partner Resources are being used.</p>
+          <input type="password" name="key" placeholder="Passcode" autocomplete="current-password" aria-label="Passcode" required>
+          <button>Open Dashboard</button>
+          <p class="err" role="alert">${esc(message || "")}</p>
+        </form>`;
+      app.querySelector("form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        setKey(e.target.key.value.trim());
+        load();
+      });
+    }
+
+    async function load() {
+      const key = getKey();
+      if (!key) return gate();
+      let res;
+      try {
+        res = await fetch("../api/stats?days=" + days, { headers: { "x-admin-key": key } });
+      } catch {
+        return gate("Couldn't reach the stats service. Check your connection and try again.");
+      }
+      if (res.status === 401) return setKey(""), gate("That passcode didn't work.");
+      if (!res.ok) return gate("The stats service returned an error (" + res.status + "). Try again in a minute.");
+      render(await res.json());
+    }
+
+    // One-series bar chart. Tap or hover a bar to read its value in the line below.
+    function chart(points, { unit, snow, axis }) {
+      const max = Math.max(1, ...points.map((p) => p.value));
+      return `
+        <div class="chart">
+          <div class="bars${snow ? " snow" : ""}">
+            ${points.map((p) => `<button class="bar" data-tip="${esc(p.label)}|${num(p.value)} ${esc(unit)}" aria-label="${esc(p.label)}: ${num(p.value)} ${esc(unit)}"><i style="height:${(p.value / max) * 100}%"></i></button>`).join("")}
+          </div>
+          <div class="axis">${axis.map((a) => `<span class="label">${esc(a)}</span>`).join("")}</div>
+          <p class="tip" aria-live="polite"><span>Tap a bar to see its number.</span></p>
+        </div>`;
+    }
+
+    function render(d) {
+      const total = Object.fromEntries(d.totals.map((t) => [t.type, t]));
+      const n = (type) => total[type]?.n || 0;
+      const people = (type) => total[type]?.people || 0;
+      const item = (type) => Object.fromEntries(d.items.filter((i) => i.type === type).map((i) => [i.item, i]));
+      const plays = item("play");
+      const downloads = item("download");
+      const watched = Object.fromEntries(d.watched.map((w) => [w.item, w.total]));
+      const reach = {};
+      for (const r of d.retention) (reach[r.item] ||= {})[r.value] = r.people;
+
+      const since = d.since ? new Date(d.since * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null;
+      const rangeText = RANGES.find((r) => r.days === days).text.toLowerCase();
+
+      const videos = resources.filter((r) => r.type !== "guide").map((r) => ({ r, p: plays[r.id] })).sort((a, b) => (b.p?.n || 0) - (a.p?.n || 0));
+      const guides = resources.filter((r) => r.type === "guide").map((r) => ({ r, p: downloads[r.id] })).sort((a, b) => (b.p?.n || 0) - (a.p?.n || 0));
+
+      const dayLabel = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const daily = d.daily.map((x) => ({ label: dayLabel(x.day), value: x.people }));
+
+      app.innerHTML = `
+        <div class="wrap">
+          <div class="head">
+            <p class="label ember">Admin · OS Partner Program</p>
+            <h1>Resource Stats.</h1>
+            <p class="label">${since ? "Counting since " + esc(since) : "No activity recorded yet"}</p>
+          </div>
+
+          <div class="ranges" role="group" aria-label="Time range">
+            ${RANGES.map((r) => `<button class="chip" data-days="${r.days}" aria-pressed="${r.days === days}">${r.text}</button>`).join("")}
+          </div>
+
+          <div class="tiles">
+            <div class="tile"><span class="label">Visitors</span><b>${num(people("visit"))}</b><small>${num(n("visit"))} visits</small></div>
+            <div class="tile"><span class="label">Video Plays</span><b>${num(n("play"))}</b><small>${num(people("play"))} people</small></div>
+            <div class="tile"><span class="label">Guide Downloads</span><b>${num(n("download"))}</b><small>${num(people("download"))} people</small></div>
+            <div class="tile"><span class="label">Reminders Set</span><b>${num(n("remind_google") + n("remind_apple"))}</b><small>${num(n("remind_open"))} opened the sheet</small></div>
+          </div>
+
+          <section>
+            <h2>Visitors By Day.</h2>
+            <p class="sub">People who opened the Partner Resources each day, ${esc(rangeText)}.</p>
+            ${daily.length ? chart(daily, { unit: "visitors", axis: [daily[0].label, daily[daily.length - 1].label] }) : `<p class="empty">Nothing recorded in this range yet.</p>`}
+          </section>
+
+          <section>
+            <h2>Videos.</h2>
+            <p class="sub">The bars show how many viewers were still watching at each point in the video.</p>
+            ${videos.map(({ r, p }) => {
+              const viewers = p?.people || 0;
+              const avg = viewers ? Math.round((watched[r.id] || 0) / viewers) : 0;
+              const points = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((m) => ({ label: "Watched " + m + "%", value: reach[r.id]?.[m] || 0 }));
+              return `
+                <div class="video">
+                  <p class="label">${r.type === "replay" ? "Call Replay" : "Video Tutorial"}${r.duration ? " · " + esc(r.duration) : ""}</p>
+                  <h3>${esc(r.title)}</h3>
+                  <div class="nums">
+                    <div><b>${num(p?.n)}</b><span class="label">Plays</span></div>
+                    <div><b>${num(viewers)}</b><span class="label">Viewers</span></div>
+                    <div><b>${avg}%</b><span class="label">Avg Watched</span></div>
+                  </div>
+                  ${viewers ? chart(points, { unit: "viewers", snow: true, axis: ["10%", "50%", "100%"] }) : ""}
+                </div>`;
+            }).join("")}
+          </section>
+
+          <section>
+            <h2>Guide Downloads.</h2>
+            <div class="rows">
+              ${guides.map(({ r, p }) => `<div class="row"><h3>${esc(r.title)}</h3><span class="label">${num(p?.people)} people</span><b>${num(p?.n)}</b></div>`).join("")}
+            </div>
+          </section>
+
+          <section>
+            <h2>Call Reminders.</h2>
+            <div class="rows">
+              <div class="row"><h3>Tapped Set A Reminder</h3><span class="label">${num(people("remind_open"))} people</span><b>${num(n("remind_open"))}</b></div>
+              <div class="row"><h3>Chose Google Calendar</h3><span class="label">${num(people("remind_google"))} people</span><b>${num(n("remind_google"))}</b></div>
+              <div class="row"><h3>Chose Apple Calendar</h3><span class="label">${num(people("remind_apple"))} people</span><b>${num(n("remind_apple"))}</b></div>
+            </div>
+          </section>
+
+          <p class="label foot">Counts are anonymous · <a href="#" id="signout">Lock this device</a></p>
+        </div>`;
+    }
+
+    app.addEventListener("click", (e) => {
+      const chip = e.target.closest("[data-days]");
+      if (chip) return (days = +chip.dataset.days), load();
+      if (e.target.id === "signout") return e.preventDefault(), setKey(""), gate();
+      const bar = e.target.closest(".bar");
+      if (bar) showTip(bar);
+    });
+    app.addEventListener("pointerover", (e) => { const bar = e.target.closest(".bar"); if (bar) showTip(bar); });
+    function showTip(bar) {
+      const bars = bar.parentElement;
+      const [label, value] = bar.dataset.tip.split("|");
+      bars.classList.add("touched");
+      bars.querySelectorAll(".on").forEach((b) => b.classList.remove("on"));
+      bar.classList.add("on");
+      bars.parentElement.querySelector(".tip").innerHTML = `${esc(value)} <span>· ${esc(label)}</span>`;
+    }
+
+    load();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Cloudflare Pages settings for the partner portal (os-partners.pages.dev).
+# The site is deployed with `wrangler pages deploy`; see the hosting notes.
+name = "os-partners"
+pages_build_output_dir = "public"
+compatibility_date = "2026-01-01"
+
+# Anonymous view counts for the /admin dashboard.
+[[d1_databases]]
+binding = "DB"
+database_name = "os-partners-stats"
+database_id = "6fd08fcd-f964-4083-9691-cb4825ab9a21"
