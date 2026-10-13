@@ -270,7 +270,7 @@
       media = `<div class="sheet-media">${
         e.kind === "video"
           ? `<video src="${esc(encodeURI(e.src))}"${r.poster ? ` poster="${esc(encodeURI(r.poster))}"` : ""} controls playsinline preload="metadata"></video>`
-          : `<iframe src="${esc(e.src)}" title="${esc(r.title)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`
+          : `<iframe src="${esc(e.src)}"${e.open ? " data-min-height=\"300\"" : ""} title="${esc(r.title)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`
       }</div>`;
     }
     const g = r.related && byId[r.related];
@@ -314,6 +314,19 @@
   }
 
   /* ---------- Sheet control ---------- */
+  // Google Drive's player refuses to be shorter than 300px, so on a phone it overflows a
+  // 16:9 frame and gets cropped. Lay it out at a size it accepts, then scale it down to fit.
+  function fitEmbed() {
+    const iframe = sheetBody.querySelector("iframe[data-min-height]");
+    if (!iframe) return;
+    const w = iframe.parentElement.clientWidth;
+    const layoutW = Math.max(w, Math.ceil((+iframe.dataset.minHeight * 16) / 9));
+    iframe.style.width = layoutW + "px";
+    iframe.style.height = (layoutW * 9) / 16 + "px";
+    iframe.style.transform = `scale(${w / layoutW})`;
+  }
+  window.addEventListener("resize", fitEmbed);
+
   function openSheet(html, centered) {
     sheet.classList.toggle("center", centered); // video sits mid-screen, where the eyes are
     sheetBody.innerHTML = html;
@@ -321,6 +334,7 @@
     sheet.scrollTop = 0;
     armFlaps(sheetBody);
 
+    fitEmbed();
     const video = sheetBody.querySelector("video");
     if (!video) return;
     const frame = video.parentElement;

@@ -280,3 +280,7 @@ html, body { height: 100%; overflow: hidden; }
 .sheet.center[open] { animation: pop 0.22s ease-out; }
 .sheet.center .grab { display: none; }
 @keyframes pop { from { opacity: 0; transform: scale(0.97); } }
+
+/* Embedded players that are laid out larger and scaled down to fit (see fitEmbed) */
+.sheet-media { overflow: hidden; }
+.sheet-media iframe[data-min-height] { transform-origin: 0 0; max-width: none; }
