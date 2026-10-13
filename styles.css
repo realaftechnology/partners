@@ -324,3 +324,8 @@ html, body { height: 100%; overflow: hidden; }
 .tiles { gap: 3px; }
 .tile { height: 52px; font-size: 27px; border-radius: 7px; }
 .unit .label { color: var(--ember); }
+
+/* Call section, pared back: one button, one quiet line under it */
+.call-topic { margin-top: 20px; }
+.remind { margin-top: 22px; }
+.call-where, .call-topic + .call-where { margin-top: 14px; font-size: 13.5px; text-align: center; }

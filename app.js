@@ -159,9 +159,8 @@
         <p class="call-time">${esc(call.timeLabel)}</p>
         ${live ? "" : `<div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}${unit(6, "Sec")}</div>`}
         ${call.topic && !live ? `<p class="call-topic">${esc(call.topic)}</p>` : ""}
-        <p class="call-where">Every ${esc(weekday)}. Live training with ${esc(call.host)}. ${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
         <button class="btn press remind" data-remind>${ICON.bell}Set A Reminder</button>
-        <button class="btn press past" data-tab="replays">${ICON.play}Watch Past Calls</button>
+        <p class="call-where">Every ${esc(weekday)}. ${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
       </section>`;
   }
 
