@@ -18,6 +18,7 @@
 
   const parseDate = (d) => new Date(d + "T12:00:00");
   const shortDate = (d) => parseDate(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const longDate = (d) => parseDate(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const period = (s) => s.replace(/[.]$/, "") + ".";
   const fileName = (r) => r.file.split("/").pop();
   const guideMeta = (r) => ["PDF", r.pages ? r.pages + (r.pages === 1 ? " page" : " pages") : "", r.size].filter(Boolean).join(" · ");
@@ -75,7 +76,10 @@
     return `
       <span class="thumb${mini ? " mini" : ""}${r.poster ? " has-poster" : ""}"${r.poster ? ` style="background-image:url('${esc(encodeURI(r.poster))}')"` : ""}>
         <span class="thumb-top">${mini ? "" : `<span class="label">${esc(TYPES[r.type].label)}</span>`}<img src="assets/bison-white.svg" alt=""></span>
-        <span class="thumb-title">${esc(period(r.title))}</span>
+        <span class="thumb-bottom">
+          ${r.type === "replay" ? `<span class="label thumb-date">${esc(longDate(r.date))}</span>` : ""}
+          <span class="thumb-title">${esc(period(r.title))}</span>
+        </span>
         ${r.video ? `<span class="play">${ICON.play}</span>` : ""}
         ${r.duration ? `<span class="badge">${esc(r.duration)}</span>` : r.video ? "" : `<span class="badge">SOON</span>`}
       </span>`;
@@ -91,7 +95,7 @@
   const feedItem = (r) => `
     <button class="feed-item press" data-open="${esc(r.id)}" aria-label="${esc(r.title)}">
       ${thumb(r)}
-      <span class="label">${esc(meta(r))}</span>
+      ${r.type === "replay" ? "" : `<span class="label">${esc(meta(r))}</span>`}
       <p class="desc">${esc(r.description)}</p>
     </button>`;
 
@@ -134,7 +138,7 @@
     const start = nextCall(now);
     const live = start <= now;
     const weekday = start.toLocaleDateString("en-US", { timeZone: call.timeZone, weekday: "long" });
-    const day = start.toLocaleDateString("en-US", { timeZone: call.timeZone, weekday: "short", month: "short", day: "numeric" });
+    const day = start.toLocaleDateString("en-US", { timeZone: call.timeZone, weekday: "long", month: "long", day: "numeric" });
     const local = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
     const localDiffers = tzOffset(start, Intl.DateTimeFormat().resolvedOptions().timeZone) !== tzOffset(start, call.timeZone);
     const digits = countdown(start);
@@ -147,13 +151,16 @@
     return `
       <section class="call" id="call" data-live="${live}">
         ${live
-          ? `<p class="label live">Live Now</p><p class="live-title">${esc(call.topic || "The Call Is On.")}</p>`
-          : `<p class="label">Next Call · ${esc(day)}</p>
-             <div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}</div>`}
-        <p class="call-when">Every ${esc(weekday)} · ${esc(call.timeLabel)}</p>
-        ${call.topic && !live ? `<p class="call-where" style="color:var(--snow)">${esc(call.topic)}</p>` : ""}
-        <p class="call-where">${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
+          ? `<p class="label call-kicker live">Live Now</p>
+             <h2 class="call-title">${esc(call.topic || "The Call Is On.")}</h2>`
+          : `<p class="label call-kicker">Next Live Call</p>
+             <h2 class="call-title">${esc(day)}.</h2>`}
+        <p class="call-time">${esc(call.timeLabel)}</p>
+        ${live ? "" : `<div class="board" role="timer" aria-label="Time until the next call">${unit(0, "Days")}${unit(2, "Hours")}${unit(4, "Min")}</div>`}
+        ${call.topic && !live ? `<p class="call-topic">${esc(call.topic)}</p>` : ""}
+        <p class="call-where">Every ${esc(weekday)}. Live training with ${esc(call.host)}. ${esc(call.where)}${localDiffers ? " " + esc(local) + " your time." : ""}</p>
         <button class="btn press remind" data-remind>${ICON.bell}Set A Reminder</button>
+        <button class="btn press past" data-tab="replays">${ICON.play}Watch Past Calls</button>
       </section>`;
   }
 
@@ -328,6 +335,7 @@
   window.addEventListener("resize", fitEmbed);
 
   function openSheet(html, centered) {
+    sheet.classList.remove("closing");
     sheet.classList.toggle("center", centered); // video sits mid-screen, where the eyes are
     sheetBody.innerHTML = html;
     if (!sheet.open) sheet.showModal();
@@ -345,8 +353,22 @@
 
   // Emptying the sheet stops playback. Skip it if another item was opened before this event arrived.
   sheet.addEventListener("close", () => !sheet.open && (sheetBody.innerHTML = ""));
-  sheet.addEventListener("click", (e) => e.target === sheet && sheet.close());
-  document.getElementById("sheet-close").addEventListener("click", () => sheet.close());
+  // Bottom sheets slide back down before closing. The centered video pop-up just closes.
+  function closeSheet() {
+    if (!sheet.open || sheet.classList.contains("closing")) return;
+    if (sheet.classList.contains("center") || reduceMotion) return sheet.close();
+    const finish = () => {
+      if (!sheet.classList.contains("closing")) return;
+      sheet.classList.remove("closing");
+      sheet.close();
+    };
+    sheet.classList.add("closing");
+    sheet.addEventListener("animationend", (e) => e.target === sheet && finish(), { once: true });
+    setTimeout(finish, 400); // in case the animation never reports back
+  }
+  sheet.addEventListener("click", (e) => e.target === sheet && closeSheet());
+  sheet.addEventListener("cancel", (e) => (e.preventDefault(), closeSheet())); // Esc / system back
+  document.getElementById("sheet-close").addEventListener("click", closeSheet);
 
   /* ---------- Sections ---------- */
   // All four sections sit side by side in one swipeable strip. Switching is a scroll,

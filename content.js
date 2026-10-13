@@ -39,6 +39,16 @@ window.PORTAL = {
 
   resources: [
     {
+      id: "beyond-the-content",
+      type: "replay",
+      title: "Beyond The Content",
+      date: "2026-10-12",
+      description: "The October 12 partner call.",
+      poster: "assets/posters/beyond-the-content.jpg",
+      video: "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/beyond-the-content.mp4",
+      duration: "50:01",
+    },
+    {
       id: "instagram-edits-tutorial",
       type: "tutorial",
       title: "Instagram Edits Tutorial",

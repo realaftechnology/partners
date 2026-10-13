@@ -110,23 +110,26 @@ html, body { height: 100%; overflow: hidden; }
 .block-head h2::before { content: ""; display: block; width: 22px; height: 2px; margin-bottom: 12px; background: var(--ember); }
 .block-head a { padding: 6px 0 6px 12px; }
 
-/* Next call: a departure board, not a box */
-.call { padding: 18px 0 20px; border-top: 1px solid var(--ember); border-bottom: 1px solid var(--ember); }
-.board { display: flex; gap: 14px; margin-top: 14px; }
-.unit { display: flex; flex-direction: column; gap: 7px; }
-.tiles { display: flex; gap: 3px; }
+/* Next call: the headline of the home screen */
+.call { padding: 22px 0 24px; border-top: 1px solid var(--ember); border-bottom: 1px solid var(--ember); }
+.call-kicker { font-size: 12.5px; color: var(--ember); }
+.call-title { font-size: 32px; letter-spacing: -0.035em; margin-top: 8px; }
+.call-time { margin-top: 8px; font: 500 20px/1.2 var(--mono); letter-spacing: 0.02em; }
+.board { display: flex; gap: 12px; margin-top: 20px; }
+.unit { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.tiles { display: flex; gap: 4px; }
 .tile {
-  position: relative; display: grid; place-items: center;
-  width: 34px; height: 46px; border-radius: 6px; background: var(--card);
-  font: 500 26px/1 var(--mono); font-style: normal; font-variant-numeric: tabular-nums;
+  position: relative; flex: 1; display: grid; place-items: center;
+  height: 60px; border-radius: 8px; background: var(--card);
+  font: 500 34px/1 var(--mono); font-style: normal; font-variant-numeric: tabular-nums;
 }
 .tile::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--obsidian); }
-.call-when { margin-top: 18px; font: 500 15px/1.3 var(--mono); letter-spacing: 0.03em; }
-.call-where { margin-top: 4px; font-size: 14.5px; color: var(--fog); }
-.live { display: inline-flex; align-items: center; gap: 8px; color: var(--snow); }
+.call-topic { margin-top: 18px; font-weight: 600; font-size: 17px; }
+.call-where { margin-top: 18px; font-size: 15px; color: var(--fog); }
+.call-topic + .call-where { margin-top: 4px; }
+.live { display: inline-flex; align-items: center; gap: 8px; }
 .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ember); animation: pulse 1.6s infinite; }
 @keyframes pulse { 50% { opacity: 0.3; } }
-.live-title { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-top: 10px; }
 
 /* Buttons */
 .btn {
@@ -272,8 +275,18 @@ html, body { height: 100%; overflow: hidden; }
 .thumb.has-poster .thumb-top, .thumb.has-poster .thumb-title { position: relative; }
 .thumb.has-poster .thumb-top .label { color: var(--snow); }
 
-/* Call reminder */
-.remind { margin-top: 18px; }
+/* Call reminder: the one control on the page that glows */
+.remind {
+  margin-top: 20px; min-height: 56px; font-size: 17px;
+  border: 1px solid var(--ember);
+  box-shadow: 0 0 20px rgba(244, 112, 13, 0.4), inset 0 0 14px rgba(244, 112, 13, 0.12);
+  animation: glow 2.6s ease-in-out infinite;
+}
+.remind svg { color: var(--ember); }
+@keyframes glow {
+  50% { box-shadow: 0 0 34px rgba(244, 112, 13, 0.7), inset 0 0 20px rgba(244, 112, 13, 0.22); }
+}
+.past { margin-top: 12px; }
 
 /* Video player: a centered pop-up that fades in, not a bottom sheet */
 .sheet.center { margin: auto; width: calc(100% - 24px); border-radius: 20px; padding-bottom: 22px; }
@@ -287,3 +300,21 @@ html, body { height: 100%; overflow: hidden; }
 
 /* Vertical videos: the frame narrows to the video's shape and stays centered */
 .sheet-media { margin: 0 auto; }
+
+.thumb.mini .thumb-title { max-width: 68%; }
+
+/* Call replays carry their date on the thumbnail, above the title */
+.thumb-bottom { position: relative; display: flex; flex-direction: column; gap: 7px; }
+.thumb-date { color: var(--ember); font-size: 11.5px; }
+.thumb.mini .thumb-bottom { gap: 4px; }
+.thumb.mini .thumb-date { font-size: 10px; }
+.feed-item .thumb + .desc { margin-top: 12px; }
+
+/* Bottom sheets slide back down when dismissed */
+.sheet.closing { animation: sheet-down 0.26s cubic-bezier(0.4, 0, 1, 1) forwards; }
+.sheet.closing::backdrop { animation: fade-out 0.26s forwards; }
+@keyframes sheet-down { to { transform: translateY(100%); } }
+@keyframes fade-out { to { opacity: 0; } }
+@media (min-width: 640px) {
+  .sheet.closing { animation: fade-out 0.2s forwards; }
+}
