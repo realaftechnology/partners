@@ -15,30 +15,30 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="#home" aria-label="The Operator Standard Partner Resources, home">
+    <button data-tab="home" aria-label="The Operator Standard Partner Resources, home">
       <img src="assets/bison-white.svg" alt="" width="61" height="43">
-    </a>
+    </button>
   </header>
 
-  <main id="view"></main>
+  <main class="pager" id="pager"></main>
 
   <nav class="tabbar" aria-label="Sections">
-    <a href="#home" data-tab="home">
+    <button data-tab="home">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>
       <span>Home</span>
-    </a>
-    <a href="#replays" data-tab="replays">
+    </button>
+    <button data-tab="replays">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>
       <span>Replays</span>
-    </a>
-    <a href="#tutorials" data-tab="tutorials">
+    </button>
+    <button data-tab="tutorials">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg>
       <span>Tutorials</span>
-    </a>
-    <a href="#guides" data-tab="guides">
+    </button>
+    <button data-tab="guides">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12.5h6M9 16h6"/></svg>
       <span>Guides</span>
-    </a>
+    </button>
   </nav>
 
   <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">

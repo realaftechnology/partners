@@ -10,9 +10,10 @@
           "guide"    = PDF guide (downloadable)
 
   video:  paste the normal share link from wherever the video is hosted.
-          YouTube (unlisted works), Vimeo, Loom and Google Drive links are
-          converted to an embedded player automatically. A direct .mp4 link
-          also works. Leave it "" and the card shows "Coming Soon".
+          A direct .mp4 link (or a file in the /media folder) plays in the
+          phone's own video player, which is the cleanest result. YouTube,
+          Vimeo, Loom and Google Drive links are embedded using that service's
+          player. Leave it "" and the card shows "Coming Soon".
 
   file:   put the PDF in the /files folder and write "files/Your-File.pdf".
   cover:  optional image for the card (guides use page one of the PDF).
@@ -42,7 +43,8 @@ window.PORTAL = {
       title: "Instagram Edits Tutorial",
       date: "2026-10-08",
       description: "A walkthrough of editing your content in Instagram's Edits app.",
-      video: "https://drive.google.com/file/d/103GP8rAnRnoeE1KfgCY_l2odk9SJF_np/view?usp=drive_link",
+      // Compressed copy hosted with the site. Original: https://drive.google.com/file/d/103GP8rAnRnoeE1KfgCY_l2odk9SJF_np/view
+      video: "media/instagram-edits-tutorial.mp4",
       poster: "assets/posters/instagram-edits-tutorial.jpg",
       duration: "10:38",
     },

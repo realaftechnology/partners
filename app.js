@@ -8,7 +8,7 @@
   };
   const TABS = { home: null, replays: "replay", tutorials: "tutorial", guides: "guide" };
 
-  const view = document.getElementById("view");
+  const pager = document.getElementById("pager");
   const sheet = document.getElementById("sheet");
   const sheetBody = document.getElementById("sheet-body");
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -210,7 +210,7 @@
         <div class="block-head"><h2>Browse.</h2></div>
         <ul class="rows">
           ${Object.entries(TYPES).map(([k, v]) => `
-            <li><a class="press" href="#${v.tab}">${esc(v.heading.replace(".", ""))}<span class="label">${String(ofType(k).length).padStart(2, "0")}</span>${ICON.chev}</a></li>`).join("")}
+            <li><button class="press" data-tab="${v.tab}">${esc(v.heading.replace(".", ""))}<span class="label">${String(ofType(k).length).padStart(2, "0")}</span>${ICON.chev}</button></li>`).join("")}
         </ul>
       </section>
       <p class="label foot">Questions · help@operatorstandard.com</p>`;
@@ -239,7 +239,7 @@
     if ((m = url.match(/loom\.com\/(?:share|embed)\/([\w-]+)/)))
       return { kind: "iframe", src: `https://www.loom.com/embed/${m[1]}?autoplay=1` };
     if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/)))
-      return { kind: "iframe", src: `https://drive.google.com/file/d/${m[1]}/preview` };
+      return { kind: "iframe", src: `https://drive.google.com/file/d/${m[1]}/preview`, open: `https://drive.google.com/file/d/${m[1]}/view` };
     if (/\.(mp4|m4v|mov|webm)(\?|#|$)/i.test(url)) return { kind: "video", src: url };
     return { kind: "iframe", src: url };
   }
@@ -263,11 +263,13 @@
         </div>`;
 
     let media = "";
+    let openLink = "";
     if (r.video) {
       const e = embed(r.video);
+      if (e.open) openLink = `<a class="btn press" href="${esc(e.open)}" target="_blank" rel="noopener">Open In Google Drive</a>`;
       media = `<div class="sheet-media">${
         e.kind === "video"
-          ? `<video src="${esc(encodeURI(e.src))}" controls autoplay playsinline preload="metadata"></video>`
+          ? `<video src="${esc(encodeURI(e.src))}"${r.poster ? ` poster="${esc(encodeURI(r.poster))}"` : ""} controls playsinline preload="metadata"></video>`
           : `<iframe src="${esc(e.src)}" title="${esc(r.title)}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`
       }</div>`;
     }
@@ -277,6 +279,7 @@
       ${text}
       <div class="sheet-actions">
         ${r.video ? "" : `<span class="btn" aria-disabled="true">Coming Soon</span>`}
+        ${openLink}
         ${g ? `<a class="btn press" href="${esc(g.file)}" download="${esc(fileName(g))}">${ICON.down}Download The Guide</a>` : ""}
       </div>`;
   }
@@ -310,57 +313,67 @@
       <div class="sheet-actions">${android ? goog + apple : apple + goog}</div>`;
   }
 
-  /* ---------- Routing ---------- */
-  // #tab shows a screen, #tab/id opens that item's sheet on top of it.
-  let currentTab = null;
-  let openedHere = false;
+  /* ---------- Sheet control ---------- */
+  function openSheet(html, centered) {
+    sheet.classList.toggle("center", centered); // video sits mid-screen, where the eyes are
+    sheetBody.innerHTML = html;
+    if (!sheet.open) sheet.showModal();
+    sheet.scrollTop = 0;
+    armFlaps(sheetBody);
 
-  function parseHash() {
-    const [tab, id] = location.hash.slice(1).split("/");
-    return { tab: tab in TABS ? tab : "home", id: id && byId[decodeURIComponent(id)] ? decodeURIComponent(id) : null };
+    const video = sheetBody.querySelector("video");
+    if (!video) return;
+    const frame = video.parentElement;
+    // Fit the frame to the video once it plays, so vertical calls aren't boxed into 16:9.
+    video.addEventListener("playing", () => video.videoWidth && (frame.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`), { once: true });
+    video.play().catch(() => {});
   }
 
-  function route() {
-    const { tab, id } = parseHash();
-    if (tab !== currentTab) {
-      currentTab = tab;
-      view.innerHTML = TABS[tab] ? listView(TABS[tab]) : homeView();
-      window.scrollTo(0, 0);
-      armFlaps(view);
-      if (tab === "home") flipTiles(true);
-      document.querySelectorAll(".tabbar a").forEach((a) => (a.dataset.tab === tab ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
-    }
-    if (id) {
-      sheet.classList.toggle("center", byId[id].type !== "guide"); // video sits mid-screen, where the eyes are
-      sheetBody.innerHTML = sheetHTML(byId[id]);
-      if (!sheet.open) sheet.showModal();
-      sheet.scrollTop = 0;
-      armFlaps(sheetBody);
-    } else if (sheet.open) sheet.close();
-  }
-
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("[data-remind]")) {
-      sheet.classList.remove("center");
-      sheetBody.innerHTML = reminderHTML();
-      sheet.showModal();
-      return armFlaps(sheetBody);
-    }
-    const o = e.target.closest("[data-open]");
-    if (!o) return;
-    openedHere = true;
-    location.hash = currentTab + "/" + encodeURIComponent(o.dataset.open);
-  });
-
-  sheet.addEventListener("close", () => {
-    sheetBody.innerHTML = ""; // stops playback
-    if (parseHash().id) openedHere ? history.back() : history.replaceState(null, "", "#" + currentTab);
-    openedHere = false;
-  });
+  sheet.addEventListener("close", () => (sheetBody.innerHTML = "")); // stops playback
   sheet.addEventListener("click", (e) => e.target === sheet && sheet.close());
   document.getElementById("sheet-close").addEventListener("click", () => sheet.close());
 
-  window.addEventListener("hashchange", route);
-  route();
+  /* ---------- Sections ---------- */
+  // All four sections sit side by side in one swipeable strip. Switching is a scroll,
+  // not a navigation, so the browser's back button leaves the site as expected.
+  const NAMES = Object.keys(TABS);
+  pager.innerHTML = NAMES.map((n) => `<section class="panel" data-panel="${n}"><div class="panel-in">${TABS[n] ? listView(TABS[n]) : homeView()}</div></section>`).join("");
+  const panels = [...pager.children];
+  const tabButtons = [...document.querySelectorAll(".tabbar [data-tab]")];
+  let current = 0;
+
+  function markTab(i) {
+    current = i;
+    tabButtons.forEach((b) => (b.dataset.tab === NAMES[i] ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
+  }
+
+  function goTo(name, instant) {
+    const i = NAMES.indexOf(name);
+    if (i < 0) return;
+    if (i === current && !instant) return panels[i].scrollTo({ top: 0, behavior: "smooth" });
+    pager.scrollTo({ left: i * pager.clientWidth, behavior: instant || reduceMotion ? "auto" : "smooth" });
+    markTab(i);
+  }
+
+  let settle;
+  pager.addEventListener("scroll", () => {
+    clearTimeout(settle);
+    settle = setTimeout(() => markTab(Math.round(pager.scrollLeft / pager.clientWidth)), 60);
+  }, { passive: true });
+  window.addEventListener("resize", () => pager.scrollTo({ left: current * pager.clientWidth }));
+
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest("[data-tab]");
+    if (tab) return goTo(tab.dataset.tab);
+    if (e.target.closest("[data-remind]")) return openSheet(reminderHTML(), false);
+    const o = e.target.closest("[data-open]");
+    if (o && byId[o.dataset.open]) openSheet(sheetHTML(byId[o.dataset.open]), byId[o.dataset.open].type !== "guide");
+  });
+
+  markTab(0);
+  const start = location.hash.slice(1);
+  if (NAMES.includes(start) && start !== "home") goTo(start, true);
+  armFlaps(pager);
+  flipTiles(true);
   setInterval(tickCall, 15000);
 })();
