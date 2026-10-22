@@ -39,6 +39,16 @@ window.PORTAL = {
 
   resources: [
     {
+      id: "how-to-speak-on-camera",
+      type: "replay",
+      title: "How to Speak on Camera",
+      date: "2026-10-19",
+      description: "The October 19 partner call.",
+      poster: "assets/posters/how-to-speak-on-camera.jpg",
+      video: "https://pub-41f624e4e4604d99915573679935a0e4.r2.dev/how-to-speak-on-camera.mp4",
+      duration: "54:51",
+    },
+    {
       id: "beyond-the-content",
       type: "replay",
       title: "Beyond The Content",
