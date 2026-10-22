@@ -1,5 +1,5 @@
 // Records one anonymous usage event. Called by the site; never returns data.
-const TYPES = new Set(["visit", "play", "progress", "download", "remind_open", "remind_google", "remind_apple"]);
+const TYPES = new Set(["visit", "play", "progress", "download", "remind_open", "remind_google", "remind_apple", "build", "copy"]);
 
 export async function onRequestPost({ request, env }) {
   let e;

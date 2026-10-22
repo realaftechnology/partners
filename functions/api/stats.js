@@ -9,7 +9,7 @@ export async function onRequestGet({ request, env }) {
 
   const [totals, items, retention, watched, daily, first] = await env.DB.batch([
     q("SELECT type, COUNT(*) AS n, COUNT(DISTINCT visitor) AS people FROM events WHERE ts >= ? GROUP BY type"),
-    q("SELECT type, item, COUNT(*) AS n, COUNT(DISTINCT visitor) AS people FROM events WHERE ts >= ? AND type IN ('play', 'download') GROUP BY type, item"),
+    q("SELECT type, item, COUNT(*) AS n, COUNT(DISTINCT visitor) AS people FROM events WHERE ts >= ? AND type IN ('play', 'download', 'build', 'copy') GROUP BY type, item"),
     q("SELECT item, value, COUNT(DISTINCT visitor) AS people FROM events WHERE ts >= ? AND type = 'progress' GROUP BY item, value"),
     q("SELECT item, SUM(best) AS total FROM (SELECT item, visitor, MAX(value) AS best FROM events WHERE ts >= ? AND type = 'progress' GROUP BY item, visitor) GROUP BY item"),
     q("SELECT day, COUNT(DISTINCT visitor) AS people, SUM(type = 'play') AS plays, SUM(type = 'download') AS downloads FROM events WHERE ts >= ? GROUP BY day ORDER BY day"),

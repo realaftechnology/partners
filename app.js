@@ -6,7 +6,7 @@
     tutorial: { tab: "tutorials", label: "Video Tutorial", heading: "Video Tutorials.", action: "Watch Tutorial" },
     guide: { tab: "guides", label: "PDF Guide", heading: "PDF Guides.", action: "Download" },
   };
-  const TABS = { home: null, replays: "replay", tutorials: "tutorial", guides: "guide" };
+  const TABS = { home: null, replays: "replay", build: "build", tutorials: "tutorial", guides: "guide" };
 
   const pager = document.getElementById("pager");
   const sheet = document.getElementById("sheet");
@@ -416,7 +416,7 @@
   // All four sections sit side by side in one swipeable strip. Switching is a scroll,
   // not a navigation, so the browser's back button leaves the site as expected.
   const NAMES = Object.keys(TABS);
-  pager.innerHTML = NAMES.map((n) => `<section class="panel" data-panel="${n}"><div class="panel-in">${TABS[n] ? listView(TABS[n]) : homeView()}</div></section>`).join("");
+  pager.innerHTML = NAMES.map((n) => `<section class="panel" data-panel="${n}"><div class="panel-in">${n === "build" ? `<div id="builder"></div>` : TABS[n] ? listView(TABS[n]) : homeView()}</div></section>`).join("");
   const panels = [...pager.children];
   const tabButtons = [...document.querySelectorAll(".tabbar [data-tab]")];
   let current = 0;
@@ -460,4 +460,7 @@
   armFlaps(pager);
   flipTiles(true);
   setInterval(tickCall, 1000);
+
+  // Shared with builder.js (the Post Builder tab).
+  window.OS = { track, openSheet, closeSheet, esc, armFlaps, flap, goTo };
 })();
