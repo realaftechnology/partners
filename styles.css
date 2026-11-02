@@ -496,3 +496,8 @@ mark.b-fill { background: none; color: var(--snow); border-bottom: 2px solid var
 .ct-delete { display: block; margin: 30px auto 0; padding: 10px; color: var(--fog); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* iOS draws date fields wider than their box; make them behave like the other fields */
+.ct-form input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; min-height: 50px; text-align: left; }
+.ct-form input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+.ct-form label { min-width: 0; }

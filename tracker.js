@@ -99,18 +99,19 @@
   function listHTML() {
     const today = todayISO();
     const week = addDays(today, 7);
-    const q = query.toLowerCase();
-    const dueNow = [], dueWeek = [], rest = [];
+    const q = query.trim().toLowerCase();
+    const dueNow = [], dueWeek = [];
     people
       .slice()
       .sort((a, b) => ((stage(a).due || "9999") < (stage(b).due || "9999") ? -1 : (stage(a).due || "9999") > (stage(b).due || "9999") ? 1 : 0))
       .forEach((p) => {
-        if (q && !p.name.toLowerCase().includes(q)) return;
         const st = stage(p);
         if (!p.joined && st.due && st.due <= today) dueNow.push(p);
         else if (!p.joined && st.due && st.due <= week) dueWeek.push(p);
-        else rest.push(p);
       });
+    // Everyone: the full list, A to Z, including people who are also due above. Search filters it.
+    const everyone = people.slice().sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    const found = q ? everyone.filter((p) => p.name.toLowerCase().includes(q)) : everyone;
     const section = (title, list, empty) => `
       <section class="ct-section">
         <div class="block-head"><h2>${title}</h2><p class="label">${String(list.length).padStart(2, "0")}</p></div>
@@ -143,9 +144,9 @@
       ${section("Due Now.", dueNow, "Nobody due right now. Nice.")}
       ${section("Due This Week.", dueWeek, "Nothing due this week.")}
       <section class="ct-section">
-        <div class="block-head"><h2>Everyone.</h2><p class="label">${String(rest.length).padStart(2, "0")}</p></div>
+        <div class="block-head"><h2>Everyone.</h2><p class="label">${String(people.length).padStart(2, "0")}</p></div>
         <label class="ct-search"><span class="sr-only">Search by name</span><input id="ct-search" type="search" value="${esc(query)}" placeholder="Search by name" autocomplete="off"></label>
-        <div id="ct-rest">${rest.length ? rest.map(card).join("") : `<p class="ct-empty">${people.length ? "No one matches that name." : "No one here yet. Add your first person above."}</p>`}</div>
+        <div id="ct-rest">${found.length ? found.map(card).join("") : `<p class="ct-empty">${people.length ? "No one matches that name." : "No one here yet. Add your first person above."}</p>`}</div>
       </section>
 
       <section class="ct-foot">
@@ -439,11 +440,9 @@
   root.addEventListener("input", (e) => {
     if (e.target.id !== "ct-search") return;
     query = e.target.value;
-    const keep = e.target.selectionStart;
-    render();
-    const s = document.getElementById("ct-search");
-    s.focus();
-    s.setSelectionRange(keep, keep);
+    const fresh = document.createElement("div");
+    fresh.innerHTML = listHTML();
+    document.getElementById("ct-rest").replaceWith(fresh.querySelector("#ct-rest"));
   });
 
   root.addEventListener("change", (e) => {
