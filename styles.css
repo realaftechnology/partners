@@ -507,3 +507,33 @@ mark.b-fill { background: none; color: var(--snow); border-bottom: 2px solid var
 .ct-confirm p { font-weight: 600; }
 .ct-confirm .ct-row { margin-top: 14px; }
 .ct-danger { background: var(--ember); color: #fff; }
+
+/* Contact Tracker: screens slide in instead of cutting */
+#ct-tracker.ct-in-forward { animation: ct-from-right 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+#ct-tracker.ct-in-back { animation: ct-from-left 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes ct-from-right { from { opacity: 0; transform: translateX(28px); } }
+@keyframes ct-from-left { from { opacity: 0; transform: translateX(-28px); } }
+.ct-form { animation: ct-drop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes ct-drop { from { opacity: 0; transform: translateY(-8px); } }
+
+/* "Person added." card with a check that draws itself */
+#ct-toast {
+  position: fixed; left: 50%; top: 42%; z-index: 30;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  min-width: 190px; padding: 24px 28px 20px; border-radius: 20px;
+  background: rgba(22, 23, 24, 0.96); border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  color: var(--snow); font-weight: 600; font-size: 16px;
+  opacity: 0; transform: translate(-50%, -50%) scale(0.92); pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+#ct-toast.ct-show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#ct-toast svg { width: 56px; height: 56px; fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+#ct-toast circle { stroke: var(--ember); stroke-dasharray: 151; stroke-dashoffset: 151; }
+#ct-toast path { stroke: var(--snow); stroke-dasharray: 34; stroke-dashoffset: 34; }
+#ct-toast.ct-show circle { animation: ct-draw 0.45s 0.05s ease-out forwards; }
+#ct-toast.ct-show path { animation: ct-draw 0.3s 0.4s ease-out forwards; }
+@keyframes ct-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  #ct-toast circle, #ct-toast path { stroke-dashoffset: 0; }
+}

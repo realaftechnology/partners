@@ -218,17 +218,48 @@
   }
 
   const scrollTop = () => root.closest(".panel")?.scrollTo({ top: 0 });
+
+  // Moving between the list and a person slides the new screen in instead of cutting to it:
+  // forward (into a person) from the right, back (to the list) from the left.
+  function slideIn(direction) {
+    root.classList.remove("ct-in-forward", "ct-in-back");
+    void root.offsetWidth; // restart the animation
+    root.classList.add(direction === "back" ? "ct-in-back" : "ct-in-forward");
+  }
   function showDetail(id) {
     confirmingDelete = false;
     currentId = id;
     render();
     scrollTop();
+    slideIn("forward");
   }
   function showList() {
     confirmingDelete = false;
     currentId = null;
     render();
     scrollTop();
+    slideIn("back");
+  }
+
+  // A short "done" card with a check that draws itself, then fades away.
+  let toastTimer;
+  function confirmToast(text) {
+    let el = document.getElementById("ct-toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "ct-toast";
+      el.setAttribute("role", "status");
+      el.setAttribute("aria-live", "polite");
+      document.body.append(el);
+    }
+    el.innerHTML = `
+      <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27.5l7.5 7.5L37.5 19"/></svg>
+      <span>${esc(text)}</span>`;
+    el.classList.remove("ct-show");
+    void el.offsetWidth;
+    el.classList.add("ct-show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("ct-show"), 1800);
   }
 
   /* ---------- Actions ---------- */
@@ -246,6 +277,7 @@
     afterChange(p, null);
     showForm = false;
     showDetail(p.id);
+    confirmToast("Person added.");
   }
 
   function update(change) {
@@ -511,7 +543,7 @@
     if (open) return showDetail(open.dataset.ctOpen);
     const a = e.target.closest("[data-ct]")?.dataset.ct;
     if (!a) return;
-    if (a === "toggle-form") return (showForm = !showForm), render(), showForm && root.querySelector("#ct-form [name=name]")?.focus();
+    if (a === "toggle-form") return (showForm = !showForm), render(), showForm && root.querySelector("#ct-form [name=name]")?.focus({ preventScroll: true });
     if (a === "list") return showList();
     if (a === "note") return addNote();
     if (a === "f7") return update((p) => ((p.f7 = todayISO()), (p.lastContact = todayISO())));
