@@ -12,14 +12,17 @@
   1. Create a Google Cloud project. Enable the Google Sheets API and the Google Drive API.
   2. Create an OAuth 2.0 Client ID (Web application). Add https://os-partners.pages.dev
      to its Authorized JavaScript origins, then paste the client ID below.
-  3. Scopes used: spreadsheets and drive.file. These are sensitive scopes: up to
-     100 test users work before Google requires OAuth verification.
+  3. Scope used: drive.file only (the brief listed spreadsheets too; drive.file alone is enough
+     to create and edit the tracker's own sheet, and it's non-sensitive, so no Google review).
   4. Sign-in is per session (no backend, no refresh tokens). An expired session
      just asks the partner to sign in again.
 */
 (function () {
-  const GOOGLE_CLIENT_ID = ""; // empty = local mode
-  const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file";
+  // Google Cloud project "OS Contact Tracker" (matt@andyfrisella.com), client "Partner Portal". Empty = local mode.
+  const GOOGLE_CLIENT_ID = "863288836678-pb95a79oht2vcvri5hlujv4ns5d63qj1.apps.googleusercontent.com";
+  // Only "files this app creates" (non-sensitive), so Google doesn't require an app review.
+  // It covers everything the tracker does: it only ever reads and writes the one sheet it creates.
+  const SCOPES = "https://www.googleapis.com/auth/drive.file";
   const SHEET_TITLE = "OS Contact Tracker";
   const CONTACT_HEADERS = ["ID", "NAME", "1ST CONTACT", "7 DAY FOLLOW UP", "14 DAY", "LAST CONTACT DATE", "JOINED", "PHONE #", "SOCIAL HANDLE", "EMAIL", "HOW CONTACTED", "LETTER SENT", "NOTES"];
   const NOTE_HEADERS = ["ID", "DATE", "NOTE"];
@@ -157,6 +160,7 @@
         <p class="ct-note">${GOOGLE_CLIENT_ID
           ? "Signed in, your list lives in a spreadsheet on your own Google Drive. This page is just the easy way to use it."
           : "Your list is saved on this phone, in this browser. No account, no server. Download a backup now and then so you never lose it."}</p>
+        <p class="ct-note"><a href="privacy/" target="_blank" rel="noopener">Privacy policy</a></p>
       </section>`;
   }
 
