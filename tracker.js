@@ -30,6 +30,9 @@
   const SHEET_KEY = "osTrackerSheetId";
   // People deleted while signed out, so their sheet rows can be cleared at the next sign-in.
   const DELETED_KEY = "osTrackerDeletedV1";
+  // Google's sign-in pass, kept on this phone only until it expires (about an hour), so reopening
+  // the link within the hour doesn't need another tap. It only opens the tracker's own sheet.
+  const TOKEN_KEY = "osTrackerTokenV1";
 
   const root = document.getElementById("ct-tracker");
   if (!root) return;
@@ -351,6 +354,7 @@
     }).then((res) => {
       if (res.status === 401) {
         accessToken = null;
+        forgetToken();
         render();
         setStatus("Your Google session ended. Sign in again.");
         throw new Error("unauthorized");
@@ -524,15 +528,31 @@
       callback: (resp) => {
         if (resp.error) return setStatus("Google sign-in didn't work. Try again.");
         accessToken = resp.access_token;
+        rememberToken(resp.access_token, resp.expires_in);
         render();
         ensureSheetAndLoad();
       },
     });
   }
 
+  function rememberToken(token, seconds) {
+    try { localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, until: Date.now() + (Number(seconds) || 3600) * 1000 })); } catch {}
+  }
+  function forgetToken() {
+    try { localStorage.removeItem(TOKEN_KEY); } catch {}
+  }
+  // A pass with at least a minute left, or null.
+  function savedToken() {
+    try {
+      const t = JSON.parse(localStorage.getItem(TOKEN_KEY));
+      return t && t.token && t.until - 60000 > Date.now() ? t.token : null;
+    } catch { return null; }
+  }
+
   function signOut() {
     if (accessToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(accessToken, () => {});
     accessToken = null;
+    forgetToken();
     status = "Signed out. Your list is still saved on this phone.";
     render();
   }
@@ -581,6 +601,12 @@
 
   /* ---------- Boot ---------- */
   if (GOOGLE_CLIENT_ID) status = sheetLinked() ? "Signed out. Sign in to sync with your Drive sheet." : "Google sync ready. Sign in to connect your Drive sheet.";
+  // Signed in within the last hour: carry on signed in and sync straight away.
+  if (GOOGLE_CLIENT_ID && savedToken()) {
+    accessToken = savedToken();
+    render();
+    ensureSheetAndLoad();
+  } else forgetToken();
   render();
   if (GOOGLE_CLIENT_ID) {
     const s = document.createElement("script");
