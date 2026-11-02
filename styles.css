@@ -501,3 +501,9 @@ mark.b-fill { background: none; color: var(--snow); border-bottom: 2px solid var
 .ct-form input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; min-height: 50px; text-align: left; }
 .ct-form input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 .ct-form label { min-width: 0; }
+
+/* Contact Tracker: in-page delete confirmation */
+.ct-confirm { margin-top: 30px; padding: 16px; border: 1px solid var(--ember); border-radius: 14px; }
+.ct-confirm p { font-weight: 600; }
+.ct-confirm .ct-row { margin-top: 14px; }
+.ct-danger { background: var(--ember); color: #fff; }

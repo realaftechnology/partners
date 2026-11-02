@@ -38,6 +38,7 @@
   let people = load();
   let currentId = null;
   let showForm = false;
+  let confirmingDelete = false; // in-page "are you sure?", since app browsers often block pop-up dialogs
   let query = "";
   let status = "Saved on this phone.";
   let accessToken = null;
@@ -193,7 +194,15 @@
           ? p.notes.slice().reverse().map((n) => `<div class="ct-notecard"><p class="label">${esc(fmt(n.date))}</p><p>${esc(n.text)}</p></div>`).join("")
           : `<p class="ct-empty">No notes yet.</p>`}
 
-        <button class="ct-delete press" data-ct="delete">Delete this person</button>
+        ${confirmingDelete
+          ? `<div class="ct-confirm" role="alert">
+               <p>Delete ${esc(p.name)}? Their notes go too. This can't be undone.</p>
+               <div class="ct-row">
+                 <button class="btn press ct-danger" data-ct="delete-yes">Delete</button>
+                 <button class="btn press" data-ct="delete-no">Keep</button>
+               </div>
+             </div>`
+          : `<button class="ct-delete press" data-ct="delete">Delete this person</button>`}
       </section>`;
   }
 
@@ -210,11 +219,13 @@
 
   const scrollTop = () => root.closest(".panel")?.scrollTo({ top: 0 });
   function showDetail(id) {
+    confirmingDelete = false;
     currentId = id;
     render();
     scrollTop();
   }
   function showList() {
+    confirmingDelete = false;
     currentId = null;
     render();
     scrollTop();
@@ -259,7 +270,8 @@
 
   function deletePerson() {
     const p = current();
-    if (!p || !confirm("Delete " + p.name + "?")) return;
+    if (!p) return;
+    confirmingDelete = false;
     if (p._row) {
       if (accessToken && sheetId) clearRow(p._row);
       else rememberDeleted(p.id);
@@ -286,10 +298,11 @@
         if (!Array.isArray(data)) throw new Error("bad file");
         people = data;
         save();
+        status = "Imported " + data.length + " people.";
         render();
-        alert("Imported " + data.length + " people.");
       } catch {
-        alert("That file didn't look like a tracker backup.");
+        status = "That file didn't look like a tracker backup.";
+        render();
       }
     };
     reader.readAsText(file);
@@ -505,7 +518,9 @@
     if (a === "f14") return update((p) => ((p.f14 = todayISO()), (p.lastContact = todayISO())));
     if (a === "joined") return update((p) => ((p.joined = !p.joined), p.joined && (p.lastContact = todayISO())));
     if (a === "letter") return update((p) => (p.letterSent = !p.letterSent));
-    if (a === "delete") return deletePerson();
+    if (a === "delete") return (confirmingDelete = true), render(), root.querySelector(".ct-confirm")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (a === "delete-no") return (confirmingDelete = false), render();
+    if (a === "delete-yes") return deletePerson();
     if (a === "export") return exportData();
     if (a === "signin") return tokenClient && tokenClient.requestAccessToken(sheetLinked() ? { prompt: "" } : {});
     if (a === "signout") return signOut();
