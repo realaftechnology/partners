@@ -28,6 +28,8 @@
   const NOTE_HEADERS = ["ID", "DATE", "NOTE"];
   const KEY = "osTrackerV1";
   const SHEET_KEY = "osTrackerSheetId";
+  // People deleted while signed out, so their sheet rows can be cleared at the next sign-in.
+  const DELETED_KEY = "osTrackerDeletedV1";
 
   const root = document.getElementById("ct-tracker");
   if (!root) return;
@@ -96,7 +98,7 @@
     if (!GOOGLE_CLIENT_ID) return "";
     return accessToken
       ? `<div class="ct-auth"><button class="btn press" data-ct="sync">Sync Now</button><button class="btn press" data-ct="signout">Sign Out</button></div>`
-      : `<div class="ct-auth"><button class="btn press" data-ct="signin">Sign In With Google</button></div>`;
+      : `<div class="ct-auth"><button class="btn ${sheetLinked() ? "btn-ember " : ""}press" data-ct="signin">Sign In With Google</button></div>`;
   }
 
   function listHTML() {
@@ -258,9 +260,9 @@
   function deletePerson() {
     const p = current();
     if (!p || !confirm("Delete " + p.name + "?")) return;
-    if (accessToken && p._row) {
-      // Clear the row without shifting the others, so everyone else's row number stays valid.
-      api("POST", `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Contacts!A${p._row}:M${p._row}:clear`, {}).catch(() => {});
+    if (p._row) {
+      if (accessToken && sheetId) clearRow(p._row);
+      else rememberDeleted(p.id);
     }
     people = people.filter((x) => x.id !== p.id);
     save();
@@ -349,6 +351,11 @@
   }
 
   // Contacts rows become people; Notes rows become their history (matched by ID).
+  // Pull the sheet in and merge it with this phone's copy:
+  // - people added on this phone while signed out are added to the sheet
+  // - changes and notes made here while signed out are sent up
+  // - people deleted here while signed out are cleared from the sheet
+  // - everything else comes from the sheet, which is the main copy
   function loadFromSheet() {
     setStatus("Syncing from your Drive sheet…");
     return valuesGet("Contacts!A1:Z1000").then((c) => {
@@ -360,14 +367,50 @@
         loaded.push({ id: r[0], name: r[1] || "", firstContact: r[2] || todayISO(), f7: r[3] || null, f14: r[4] || null, lastContact: r[5] || r[2] || todayISO(), joined: r[6] === "Yes", phone: r[7] || "", social: r[8] || "", email: r[9] || "", howMet: r[10] || "", letterSent: r[11] === "Yes", notes: [], _row: i + 1 });
       }
       return valuesGet("Notes!A1:C1000").then((n) => {
-        const byId = Object.fromEntries(loaded.map((p) => [p.id, p]));
+        const fromSheet = Object.fromEntries(loaded.map((p) => [p.id, p]));
         (n.values || []).slice(1).forEach((nr) => {
-          if (nr[0] && byId[nr[0]]) byId[nr[0]].notes.push({ date: nr[1] || "", text: nr[2] || "" });
+          if (nr[0] && fromSheet[nr[0]]) fromSheet[nr[0]].notes.push({ date: nr[1] || "", text: nr[2] || "", _s: true });
         });
-        people = loaded;
+
+        const deleted = new Set(loadDeleted().map((d) => d.id));
+        const toClear = loaded.filter((p) => deleted.has(p.id)).map((p) => p._row);
+        let merged = loaded.filter((p) => !deleted.has(p.id));
+        const toPush = [];
+        people.forEach((lp) => {
+          const sp = fromSheet[lp.id];
+          const unsynced = (lp.notes || []).filter((x) => !x._s);
+          if (!sp) {
+            // Never reached the sheet: add it. (Synced before but gone from the sheet = deleted there.)
+            if (!lp._row || lp._dirty) {
+              lp._row = null;
+              merged.push(lp);
+              toPush.push(lp);
+            }
+          } else if (!deleted.has(lp.id)) {
+            if (lp._dirty) {
+              lp._row = sp._row;
+              lp.notes = sp.notes.concat(unsynced);
+              merged = merged.map((x) => (x.id === lp.id ? lp : x));
+              toPush.push(lp);
+            } else if (unsynced.length) {
+              sp.notes = sp.notes.concat(unsynced);
+              toPush.push(sp);
+            }
+          }
+        });
+
+        people = merged;
         save();
         render();
-        setStatus("Synced. Your list lives in a spreadsheet on your Drive.");
+        // One at a time, so each new row number is known before the next append.
+        return toClear
+          .reduce((chain, row) => chain.then(() => clearRow(row)), Promise.resolve())
+          .then(() => toPush.reduce((chain, p) => chain.then(() => pushAll(p)), Promise.resolve()))
+          .then(() => {
+            saveDeleted([]);
+            save();
+            setStatus("Synced. Your list lives in a spreadsheet on your Drive.");
+          });
       });
     });
   }
@@ -384,14 +427,49 @@
       save();
     });
   }
-  const pushNote = (p, note) => (accessToken && sheetId ? valuesAppend("Notes!A1", [[p.id, note.date, note.text]]) : Promise.resolve());
+  // Notes are marked _s once they're in the sheet, so none are sent twice or lost.
+  function pushNote(p, note) {
+    if (!accessToken || !sheetId) return Promise.resolve();
+    return valuesAppend("Notes!A1", [[p.id, note.date, note.text]]).then(() => (note._s = true));
+  }
 
+  // Send a person's row and any notes the sheet doesn't have yet.
+  function pushAll(p) {
+    return pushPerson(p)
+      .then(() => (p.notes || []).filter((x) => !x._s).reduce((chain, note) => chain.then(() => pushNote(p, note)), Promise.resolve()))
+      .then(() => {
+        p._dirty = false;
+        save();
+      });
+  }
+
+  // Clear a row without shifting the others, so everyone else's row number stays valid.
+  const clearRow = (row) => api("POST", `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Contacts!A${row}:M${row}:clear`, {}).catch(() => {});
+
+  function loadDeleted() {
+    try { return JSON.parse(localStorage.getItem(DELETED_KEY)) || []; } catch { return []; }
+  }
+  function saveDeleted(list) {
+    try { localStorage.setItem(DELETED_KEY, JSON.stringify(list)); } catch {}
+  }
+  const rememberDeleted = (id) => saveDeleted(loadDeleted().concat([{ id }]));
+  const sheetLinked = () => {
+    try { return !!localStorage.getItem(SHEET_KEY); } catch { return false; }
+  };
+
+  // After any change: send it to the sheet if signed in, otherwise mark it to send at the next sign-in.
   function afterChange(p, note) {
-    if (!accessToken || !sheetId || !p) return;
+    if (!p) return;
+    p._dirty = true;
+    save();
+    if (!accessToken || !sheetId) {
+      if (sheetLinked()) setStatus("Saved on this phone. Sign in to send it to your Drive sheet.");
+      return;
+    }
     setStatus("Syncing…");
-    Promise.all([pushPerson(p), note ? pushNote(p, note) : null])
+    pushAll(p)
       .then(() => setStatus("Synced. Your list lives in a spreadsheet on your Drive."))
-      .catch(() => setStatus("Sync failed. Your list is still saved on this phone."));
+      .catch(() => setStatus("Sync failed. Your list is still saved on this phone. It will try again next time you sign in."));
   }
 
   function initGoogle() {
@@ -429,7 +507,7 @@
     if (a === "letter") return update((p) => (p.letterSent = !p.letterSent));
     if (a === "delete") return deletePerson();
     if (a === "export") return exportData();
-    if (a === "signin") return tokenClient && tokenClient.requestAccessToken();
+    if (a === "signin") return tokenClient && tokenClient.requestAccessToken(sheetLinked() ? { prompt: "" } : {});
     if (a === "signout") return signOut();
     if (a === "sync") return accessToken && loadFromSheet();
   });
@@ -455,7 +533,7 @@
   });
 
   /* ---------- Boot ---------- */
-  if (GOOGLE_CLIENT_ID) status = "Google sync ready. Sign in to connect your Drive sheet.";
+  if (GOOGLE_CLIENT_ID) status = sheetLinked() ? "Signed out. Sign in to sync with your Drive sheet." : "Google sync ready. Sign in to connect your Drive sheet.";
   render();
   if (GOOGLE_CLIENT_ID) {
     const s = document.createElement("script");
