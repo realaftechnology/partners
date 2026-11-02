@@ -25,6 +25,10 @@
 */
 
 window.PORTAL = {
+  // Types listed here stay in this file but are hidden from the site.
+  // Call replays live in The Operator Standard app now; remove "replay" to show them again.
+  hide: ["replay"],
+
   call: {
     weekday: 1, // 0 = Sunday, 1 = Monday
     hour: 18, // 6 PM, in the time zone below

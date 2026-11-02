@@ -1,18 +1,20 @@
 (function () {
   const { call, resources } = window.PORTAL;
+  // Resource types kept in content.js but not shown on the site (see "hide" in content.js).
+  const HIDDEN = new Set(window.PORTAL.hide || []);
 
   const TYPES = {
     replay: { tab: "replays", label: "Call Replay", heading: "Call Replays.", action: "Watch Replay" },
     tutorial: { tab: "tutorials", label: "Video Tutorial", heading: "Video Tutorials.", action: "Watch Tutorial" },
     guide: { tab: "guides", label: "PDF Guide", heading: "PDF Guides.", action: "Download" },
   };
-  const TABS = { home: null, replays: "replay", build: "build", tutorials: "tutorial", guides: "guide" };
+  const TABS = { home: null, build: "build", contacts: "contacts", tutorials: "tutorial", guides: "guide" };
 
   const pager = document.getElementById("pager");
   const sheet = document.getElementById("sheet");
   const sheetBody = document.getElementById("sheet-body");
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const items = [...resources].sort((a, b) => b.date.localeCompare(a.date));
+  const items = resources.filter((r) => !HIDDEN.has(r.type)).sort((a, b) => b.date.localeCompare(a.date));
   const byId = Object.fromEntries(items.map((r) => [r.id, r]));
   const ofType = (t) => items.filter((r) => r.type === t);
 
@@ -239,7 +241,7 @@
       <section class="block">
         <div class="block-head"><h2>Browse.</h2></div>
         <ul class="rows">
-          ${Object.entries(TYPES).map(([k, v]) => `
+          ${Object.entries(TYPES).filter(([k]) => !HIDDEN.has(k)).map(([k, v]) => `
             <li><button class="press" data-tab="${v.tab}">${esc(v.heading.replace(".", ""))}<span class="label">${String(ofType(k).length).padStart(2, "0")}</span>${ICON.chev}</button></li>`).join("")}
         </ul>
       </section>
@@ -416,7 +418,7 @@
   // All four sections sit side by side in one swipeable strip. Switching is a scroll,
   // not a navigation, so the browser's back button leaves the site as expected.
   const NAMES = Object.keys(TABS);
-  pager.innerHTML = NAMES.map((n) => `<section class="panel" data-panel="${n}"><div class="panel-in">${n === "build" ? `<div id="builder"></div>` : TABS[n] ? listView(TABS[n]) : homeView()}</div></section>`).join("");
+  pager.innerHTML = NAMES.map((n) => `<section class="panel" data-panel="${n}"><div class="panel-in">${n === "build" ? `<div id="builder"></div>` : n === "contacts" ? `<div id="ct-tracker"></div>` : TABS[n] ? listView(TABS[n]) : homeView()}</div></section>`).join("");
   const panels = [...pager.children];
   const tabButtons = [...document.querySelectorAll(".tabbar [data-tab]")];
   let current = 0;

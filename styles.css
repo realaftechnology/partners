@@ -447,3 +447,52 @@ mark.b-fill { background: none; color: var(--snow); border-bottom: 2px solid var
 #b-list .b-hook:first-of-type { margin-top: 4px; }
 
 .b-filters { grid-template-columns: 1fr; }
+
+.tabbar button { white-space: nowrap; }
+
+/* ---------- Contact Tracker ---------- */
+.ct-intro { color: var(--fog); font-size: 16px; margin-top: 10px; }
+.ct-status { margin-top: 14px; color: var(--ember); }
+.ct-auth { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.ct-auth .btn { flex: 1; min-width: 140px; }
+.ct-form { margin-top: 16px; padding: 16px; background: var(--card); border-radius: 16px; display: grid; gap: 14px; }
+.ct-form label .label { display: block; margin-bottom: 6px; }
+.ct-form input, .ct-form textarea, .ct-search input, .ct-addnote textarea {
+  width: 100%; padding: 13px 14px; background: var(--obsidian); border: 1px solid var(--line); border-radius: 12px;
+  color: var(--snow); font: 400 16px/1.45 var(--sans); color-scheme: dark;
+}
+.ct-form input:focus, .ct-form textarea:focus, .ct-search input:focus, .ct-addnote textarea:focus { outline: none; border-color: var(--ember); }
+.ct-form ::placeholder, .ct-search ::placeholder, .ct-addnote ::placeholder { color: #5E636B; }
+.ct-error { color: var(--ember); font-size: 14.5px; min-height: 0; }
+.ct-error:empty { display: none; }
+.ct-section { padding-top: 32px; }
+.ct-search { display: block; margin-bottom: 12px; }
+.ct-search input { background: var(--card); }
+.ct-card { display: block; width: 100%; padding: 15px 16px; margin-bottom: 10px; background: var(--card); border-radius: 14px; }
+.ct-name { display: block; font-size: 17px; font-weight: 700; letter-spacing: -0.015em; }
+.ct-meta { display: block; color: var(--fog); font-size: 13.5px; margin-top: 4px; line-height: 1.45; }
+.ct-badge { display: inline-block; margin-top: 10px; padding: 5px 10px; border-radius: 999px; font: 500 11px/1.2 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.ct-due { background: var(--ember); color: #fff; }
+.ct-soon { background: rgba(244, 112, 13, 0.16); color: var(--ember); }
+.ct-joined { border: 1px solid var(--snow); color: var(--snow); }
+.ct-empty { color: var(--fog); font-size: 15px; padding: 4px 0 8px; }
+.ct-foot { padding-top: 36px; }
+.ct-foot .ct-auth .btn { background: var(--card); }
+.ct-import input { display: none; }
+.ct-note { color: var(--fog); font-size: 13.5px; margin-top: 14px; text-align: center; }
+.ct-back { color: var(--ember); font-weight: 600; font-size: 15px; padding: 18px 0 6px; }
+.ct-detail { padding-top: 8px; }
+.ct-dname { font-size: 32px; letter-spacing: -0.035em; }
+.ct-detail .ct-meta { font-size: 14.5px; margin-top: 8px; }
+.ct-addnote { display: block; margin-top: 26px; }
+.ct-addnote .label { display: block; margin-bottom: 8px; }
+.ct-addnote + .btn { margin-top: 10px; }
+.ct-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.ct-row .btn { font-size: 14px; padding: 0 10px; text-align: center; line-height: 1.2; }
+.ct-row .ct-done { border: 1px solid var(--ember); color: var(--ember); }
+.ct-notes-head { margin-top: 34px; }
+.ct-notecard { padding: 10px 0 10px 14px; margin-bottom: 10px; border-left: 2px solid var(--ember); }
+.ct-notecard p:last-child { white-space: pre-wrap; margin-top: 4px; font-size: 15.5px; }
+.ct-delete { display: block; margin: 30px auto 0; padding: 10px; color: var(--fog); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
